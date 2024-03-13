@@ -3,11 +3,11 @@ from random import randint as rnd
 """Основной код игры"""
 
 SCREEN_WIDTH = 800
-SCREEN_HEIGTH = 600
+SCREEN_HEIGTH = 800
 BACKGROUN_COLOR = (0, 0, 0)
 FPS = 60
 
-DEFAULT_PLAYER_POS = (SCREEN_WIDTH // 2, 550)
+DEFAULT_PLAYER_POS = (SCREEN_WIDTH // 2, 750)
 PLAYER_COLOR = (0, 200, 64)
 
 BULLET_SPEED = 15
@@ -17,13 +17,16 @@ ENEMY_COLOR = (210, 105, 30)
 ENEMY_SIZE = 40
 ENEMY_MIN_SPEED = 1
 ENEMY_MAX_SPEED = 5
+ENEMY_COUNT = 50
 
 pg.init()
 window = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGTH), 0, 32)
 pg.display.set_caption('Игрушка')
 clock = pg.time.Clock()
 pg.mouse.set_visible(False)
+font = pg.font.Font(None, 24)
 
+lives = 10
 bullets = []
 enemies = []
 
@@ -91,12 +94,14 @@ class Enemy:
         enemies.append(self)
 
     def update(self):
+        global lives
         self.py += self.speed
         if self.py > SCREEN_HEIGTH:
+            lives -= 1
             enemies.remove(self)
         for bullet in bullets:
-            if (self.px <= bullet.px <= (self.px + ENEMY_SIZE) and
-                self.py <= bullet.py <= (self.py + ENEMY_SIZE)):
+            if (self.px <= bullet.px <= (self.px + ENEMY_SIZE)
+                    and self.py <= bullet.py <= (self.py + ENEMY_SIZE)):
                 enemies.remove(self)
                 bullets.remove(bullet)
 
@@ -116,10 +121,13 @@ def run():
                 raise SystemExit
 
         window.fill(BACKGROUN_COLOR)
-        pg.draw.rect(window, (224, 255, 255), (0, 550, 800, 150))
+        pg.draw.rect(window, (224, 255, 255), (0, 750, 800, 150))
+
+        text = font.render(f'Жизни: {lives}', 1, 'gold')
+        window.blit(text, (10, 20))
         
         timer += 1
-        if timer % 60 == 0:
+        if timer % 60 == 0 and len(enemies) <= ENEMY_COUNT:
             Enemy()
         for enemy in enemies:
             enemy.update()
@@ -133,6 +141,9 @@ def run():
         for bullet in bullets:
             bullet.update()
             bullet.draw(window)
+
+        if lives == 0:
+            play = False
 
         pg.display.update()
         clock.tick(FPS)
