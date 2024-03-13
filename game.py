@@ -14,6 +14,9 @@ BULLET_SPEED = 15
 BULLET_COLOR = (255, 0, 0)
 
 ENEMY_COLOR = (210, 105, 30)
+ENEMY_SIZE = 40
+ENEMY_MIN_SPEED = 1
+ENEMY_MAX_SPEED = 5
 
 pg.init()
 window = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGTH), 0, 32)
@@ -32,7 +35,7 @@ class Player:
         self.px, self.py = position
         self.body_color = body_color
         self.shot_speed = 15
-    
+
     def update(self, position):
         self.shot_speed += 1
         mx, _ = position
@@ -42,7 +45,7 @@ class Player:
             self.px = 30
         elif self.px > 770:
             self.px = 770
-    
+
     def draw(self, surf):
         pg.draw.circle(surf,
                        self.body_color,
@@ -53,7 +56,7 @@ class Player:
                      (self.px, self.py),
                      (self.px, self.py - 45),
                      15)
-    
+
     def shot(self):
         if self.shot_speed % FPS > 15:
             self.shot_speed = 0
@@ -82,9 +85,9 @@ class Bullet:
 class Enemy:
     def __init__(self, body_color=ENEMY_COLOR):
         self.px, self.py = rnd(30, 770), -100
-        self.speed = rnd(1, 10)
+        self.speed = rnd(ENEMY_MIN_SPEED, ENEMY_MAX_SPEED)
         self.color = body_color
-        self.rect = pg.rect.Rect(self.px, self.py, 40, 40)
+        self.rect = pg.Rect(self.px, self.py, ENEMY_SIZE, ENEMY_SIZE)
         enemies.append(self)
 
     def update(self):
@@ -92,12 +95,13 @@ class Enemy:
         if self.py > SCREEN_HEIGTH:
             enemies.remove(self)
         for bullet in bullets:
-            if self.rect.collidepoint(bullet.px, bullet.py):
+            if (self.px <= bullet.px <= (self.px + ENEMY_SIZE) and
+                self.py <= bullet.py <= (self.py + ENEMY_SIZE)):
                 enemies.remove(self)
                 bullets.remove(bullet)
 
     def draw(self, surf):
-        pg.draw.rect(surf, self.color, self.rect)
+        pg.draw.rect(surf, self.color, (self.px, self.py, 40, 40))
 
 
 def run():
@@ -113,10 +117,10 @@ def run():
 
         window.fill(BACKGROUN_COLOR)
         pg.draw.rect(window, (224, 255, 255), (0, 550, 800, 150))
-        timer +=1
-        if timer % FPS > 30:
+        
+        timer += 1
+        if timer % 60 == 0:
             Enemy()
-            #timer = 0
         for enemy in enemies:
             enemy.update()
             enemy.draw(window)
